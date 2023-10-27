@@ -40,94 +40,46 @@ for Y in d.date.dt.year.unique():
 d['vi'] = vi 
 
 dna = d.dropna()
-dna = dna[dna.f0]
-
-
-
-p95 = dna['vi'].quantile(0.95)
-
-dna['cc'] = dna['vi'] > p95
-dna['vin'] = dna.vi/max(dna.vi)
-
-
-import matplotlib.pyplot as plt
-plt.figure(1)
-plt.plot(dna.vin, dna.kc, '.b')
-plt.plot(dna[dna.cc].vin, dna[dna.cc].kc, '.r')
-plt.plot()
 
 
 
 
+from sklearn.cluster import KMeans    
+for i in range(2,11):
+    
+
+
+    
+    X = dna[[ 'kc', 'vi']]
+    kmeans = KMeans(n_clusters=i).fit(X)
+    
+    centroids = kmeans.cluster_centers_
+    
+    
+    # Predicting the clusters
+    labels = kmeans.predict(X)
+    # Getting the cluster centers
+    C = kmeans.cluster_centers_
+    colores=['red','green','blue','gray','yellow']
+    asignar=[]
+    pre_clase=[]
+    for row in labels:
+        #asignar.append(colores[row])
+        pre_clase.append(row)
+    
+     
+    dna[f'cluster_{i}'] = pre_clase
+    	
+    # # Getting the values and plotting it
+    # f1 = dna['kc'].values
+    # f2 = dna['vi'].values
+    
+    # import matplotlib.pyplot as plt
+    # plt.figure(i)
+    # plt.scatter(f2,f1, c=asignar, s=1)
 
 
 
 
 
-len((dna[dna.cc].vin)) / len((dna))  * 100
-
-
-
-import pandas as pd
-from sklearn.neighbors import KernelDensity
-# Supongamos que 'df' es tu DataFrame y tiene columnas 'vi' y 'kc'
-# X será una matriz con las columnas 'vi' y 'kc' como características
-X = dna[['vi', 'kc']]
-
-
-kde = KernelDensity(bandwidth=0.0001)  # Puedes ajustar el ancho de banda según sea necesario
-kde.fit(X)
-
-log_densidades=  kde.score_samples(X[:])
-
-
-
-# Normaliza los logaritmos de las densidades a valores entre 0 y 1
-densidades = np.exp(log_densidades)
-densidades = (densidades - densidades.min()) / (densidades.max() - densidades.min())
-
-
-dna['densidad'] = densidades
-
-# fig = plt.figure(figsize=(12, 10))
-# ax = fig.add_subplot(111, projection='3d')
-# ax.scatter(dna.vi, dna.kc, dna.densidad, c='black', s=0.1)
-
-my_centroids = np.array([[ 0.94, 0.025, 0.69], [0.912, 0.0156,  0.025], 
-                         [ 0.766, 0.937, 0.007],
-                         [ 0.15, 0.01, 0.07], [ 0.735, 0.539, 0.005]])
-
-
-
-
-X = dna[[ 'kc', 'vi', 'densidad']]
-
-from sklearn.metrics import pairwise_distances_argmin_min
-from sklearn.cluster import KMeans
-kmeans = KMeans(n_clusters=5, init=my_centroids ).fit(X)
-
-centroids = kmeans.cluster_centers_
-
-
-# Predicting the clusters
-labels = kmeans.predict(X)
-# Getting the cluster centers
-C = kmeans.cluster_centers_
-colores=['red','green','blue','gray','yellow']
-asignar=[]
-pre_clase=[]
-for row in labels:
-    asignar.append(colores[row])
-    pre_clase.append(row)
-
- 
-
-	
-# Getting the values and plotting it
-f1 = dna['kc'].values
-f2 = dna['vi'].values
-
-import matplotlib.pyplot as plt
-plt.figure(9)
-plt.scatter(f2,f1, c=asignar, s=1)
 
