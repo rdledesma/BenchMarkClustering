@@ -81,5 +81,35 @@ for i in range(2,11):
 
 
 
+from sklearn.ensemble import RandomForestClassifier
+rf = RandomForestClassifier()
+X_train = dna[['GHI', 'Mak', 'alpha', 'CTZ',
+       'delta', 'kcmod', 'ktmod', 'ktmod:kcmod', 'ktmod:alpha',
+       'Mak:alpha', 'kcmod:alpha', 'ktmod:Mak', 'Mak:kcmod']][
+           dna.date.dt.year == 2014]
+           
+           
+from sklearn import metrics
+
+for i in range(2,11):
+    y_train = dna[f'cluster_{i}'][
+        dna.date.dt.year == 2014]
+    
+    rf.fit(X_train, y_train)
+    
+    
+    dna[f'pred_{i}'] = rf.predict(  dna[['GHI', 'Mak', 'alpha', 'CTZ',
+           'delta', 'kcmod', 'ktmod', 'ktmod:kcmod', 'ktmod:alpha',
+           'Mak:alpha', 'kcmod:alpha', 'ktmod:Mak', 'Mak:kcmod']])
+
+import matplotlib.pyplot as plt
+
+for i in range(2, 11):
+
+    confusion_matrix = metrics.confusion_matrix(dna[f'cluster_{i}'], dna[f'pred_{i}'])
+    cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix = confusion_matrix)
+    cm_display.plot()
+    plt.show()
+
 
 
