@@ -1,0 +1,12 @@
+[workspace]
+restore_data_on_startup = True
+save_data_on_exit = True
+save_history = True
+save_non_project_files = False
+project_type = 'empty-project-type'
+recent_files = ['apend_vi.py', '../../miniconda3/envs/goes-env/lib/python3.11/site-packages/jedi/third_party/typeshed/stdlib/3/builtins.pyi', 'apend_vi_diego_mod.py', 'regresionDiego.py']
+
+[main]
+version = 0.2.0
+recent_files = []
+
