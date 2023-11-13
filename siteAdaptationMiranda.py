@@ -13,7 +13,7 @@ import numpy as np
 import Metrics as m
 import matplotlib.pyplot as plt
 
-d = pd.read_csv('sa_diego.csv')
+d = pd.read_csv('sa_15_Diego2.csv')
 d['date'] = pd.to_datetime(d.date)
 c = pd.read_csv('sa_15_cony.csv')
 c['date'] = pd.to_datetime(c.date)
@@ -82,6 +82,6 @@ plt.plot(test.ghi, test.pred, '.')
 true = test.ghi
 pred = test.pred
 
-m.rmbe(true, pred)
-m.rmae(true, pred)
-m.rrmsd(true, pred)
+print(m.rmbe(true, pred))
+print(m.rmae(true, pred))
+print(m.rrmsd(true, pred))

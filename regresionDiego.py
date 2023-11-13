@@ -9,18 +9,57 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 import pandas as pd
 
-d = pd.read_csv('sa_15_vimod.csv')
+d = pd.read_csv('sa_15_Diego.csv')
+d['date'] = pd.to_datetime(d.date)
+c = pd.read_csv('sa_15_cony.csv')
+c['date'] = pd.to_datetime(c.date)
 
+
+
+
+d = (d.set_index('date')
+      .reindex(c.date)
+      .rename_axis(['date'])
+      #.fillna(0)
+      .reset_index())
+
+
+
+d['kcmod'] = c['kcmod']
+d['ktmod'] = c['ktmod']
+d['ktmod:kcmod'] = c['ktmod:kcmod']
+d['ktmod:alpha'] = c['ktmod:alpha']
+d['Mak:alpha'] = c['Mak:alpha']
+d['kcmod:alpha'] = c['kcmod:alpha']
+d['ktmod:Mak'] = c['ktmod:Mak']
+d['Mak:kcmod'] = c['Mak:kcmod']
+
+d = d[d.alpha>10]
+d = d[d.kc<1.3]
+d = d.dropna()
 d = d[d.ghi>5]
-import matplotlib.pyplot as plt
-
-plt.plot(d.ghi, d.GHI, '.r')
-
+dtrain = d[d.date.dt.year == 2015]
+dtest = d[d.date.dt.year < 2015]
 
 
-for c in d.cls.unique():
-    model = smf.glm(formula = "kc ~ Mak + alpha + kcmod + ktmod + ktmod:kcmod + ktmod:alpha + Mak:alpha + kcmod:alpha + ktmod:Mak + Mak:kcmod", 
-                    data = d[(d.Train) & (d.cls == c)], 
+
+
+
+
+
+
+
+
+
+
+for cls in d.clsDiego.unique():
+    
+    Xtrain = dtrain[dtrain.clsDiego == cls]
+    
+    
+    
+    model = smf.glm(formula = "kc ~ Mak + alpha + delta + kcmod + ktmod +  ktmod:kcmod + ktmod:alpha + Mak:alpha + kcmod:alpha + ktmod:Mak +Mak:kcmod", 
+                    data = Xtrain, 
                     family = sm.families.Binomial())
     
     # Fit the model
@@ -29,64 +68,33 @@ for c in d.cls.unique():
     
     # Display and interpret results
     # print(result.summary())
-    predictions = result.predict(d[(~ d.Train) & (d.cls == c)][[ 'Mak', 'alpha',  'kcmod', 'ktmod', 'ktmod:kcmod', 'ktmod:alpha',
-           'Mak:alpha', 'kcmod:alpha', 'ktmod:Mak', 'Mak:kcmod']])
-    
+    predictions = result.predict(dtest) * dtest['Clear sky GHI'].values
     
      
-    d[f'ghiPred_{c}'] = predictions * d[~d.Train]['Clear sky GHI']
+    dtest[f'ghiPred_{cls}'] = predictions
     
     #plt.plot(d.ghi, d.ghiPred, '.r')
 
 import numpy as np
-d['ghiPredDiego'] = np.nan
-for c in d.cls.unique():    
-    d['ghiPredDiego'] = np.where(d.cls == c, d[f'ghiPred_{c}'], d.ghiPredDiego)
-
-d['date'] = pd.to_datetime(d.date)
-plt.plot(d.date, d.ghi, '-b')
-plt.plot(d.date, d.ghiPredDiego, '-r')
-plt.plot(d.date, d.GHI, '-g')
+dtest['ghiPred'] = np.nan
+for c in dtest.clsDiego.unique():    
+    dtest['ghiPred'] = np.where(dtest.clsDiego == c, dtest[f'ghiPred_{c}'], dtest.ghiPred)
 
 
 
-plt.plot(d.ghi, d.ghiPredDiego, '.r')
-    
-    
-    
-
-from scipy import interpolate
-def ecdf(x): # empirical CDF computation
-    xs = np.sort(x)
-    ys = np.arange(1, len(xs)+1)/float(len(xs))
-    return xs, ys
-
-def QuantileMappinBR(y_obs,y_mod): # Bias Removal using empirical quantile mapping
-    y_cor = y_mod
-    x_obs,cdf_obs = ecdf(y_obs)
-    x_mod,cdf_mod = ecdf(y_mod)
-    # Translate data to the quantile domain, apply the CDF operator
-    cdf = interpolate.interp1d(x_mod,cdf_mod,kind='nearest',fill_value='extrapolate')
-    qtile = cdf(y_mod)
-    # Apply de CDF^-1 operator to reverse the operation to radiation domain
-    cdfinv = interpolate.interp1d(cdf_obs,x_obs,kind='nearest',fill_value='extrapolate')
-    y_cor = cdfinv(qtile)
-    return y_cor
 
 
-for c in d.cls.unique():
-    d[f'ghi_adapted{c}'] = QuantileMappinBR(d[d.cls == c].ghi.values, d.ghiPredDiego.values)
+import matplotlib.pyplot as plt
+
+plt.plot(dtest.CTZ, dtest.ghiPred, '.r')
 
 
-d['ghi_adapted'] = np.nan
-for c in d.cls.unique():    
-    d['ghi_adapted'] = np.where(d.cls == c, d[f'ghi_adapted{c}'], d.ghi_adapted)
 
 
 d['date'] = pd.to_datetime(d.date)
-plt.plot(d.date, d.ghi, '-b')
-plt.plot(d.ghi, QuantileMappinBR(d.ghi, d.ghiPredDiego), '.r')
-plt.plot(d.date, d.GHI, '-g')
+plt.plot(dtest.date, dtest.ghi, '-b')
+plt.plot(dtest.date, dtest.ghiPred, '-r')
+plt.plot(dtest.date, dtest.GHI, '-g')
 
 
 
@@ -108,8 +116,9 @@ def rrmsd(true, pred):
     return np.sqrt(sum((pred - true) ** 2) / true.size)/true.mean()  * 100
 
 
-df = d[['ghi', 'ghiPredDiego','GHI']].dropna()
+df = dtest[['ghi', 'ghiPred']]
 
-rmbe(df.ghi, df.ghiPredDiego)
-rrmsd(df.ghi,df.ghiPredDiego)
+rmbe(df.ghi, df.ghiPred)
+rrmsd(df.ghi, df.ghiPred)
 
+df.ghi.mean()

@@ -107,8 +107,8 @@ d['cls'] = s.cls
 
 from sklearn.model_selection import train_test_split
 
-X = s[['TOA', 'Clear sky GHI', 'GHI', 'ghi', 'Mak', 'alpha', 'CTZ',
-       'delta', 'kc', 'kcmod', 'kt', 'ktmod']]
+X = s[['TOA', 'Clear sky GHI', 'GHI', 'Mak', 'alpha', 'CTZ',
+       'delta', 'kcmod',  'ktmod']]
 y = s.cls
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=400)
 
@@ -134,8 +134,8 @@ plt.show()
 
 
 
-d['clsDiego'] = rf.predict(d[['TOA', 'Clear sky GHI', 'GHI', 'ghi', 'Mak', 'alpha', 'CTZ',
-       'delta', 'kc', 'kcmod', 'kt', 'ktmod']])
+d['clsDiego'] = rf.predict(d[['TOA', 'Clear sky GHI', 'GHI', 'Mak', 'alpha', 'CTZ',
+       'delta', 'kcmod', 'ktmod']])
 
 
 
@@ -143,4 +143,4 @@ d['clsDiego'] = rf.predict(d[['TOA', 'Clear sky GHI', 'GHI', 'ghi', 'Mak', 'alph
     
 
 s = d[['date', 'TOA', 'Clear sky GHI', 'GHI', 'ghi', 'Mak', 'alpha', 'CTZ',
-       'delta', 'kc', 'kcmod', 'kt', 'ktmod', 'clsDiego']].to_csv('sa_15_Diego.csv', index=False)
+       'delta', 'kc', 'kcmod', 'kt', 'ktmod', 'clsDiego']].to_csv('sa_15_Diego2.csv', index=False)
