@@ -55,7 +55,7 @@ class Geo:
         #self.df['CTZ'] =  self.df.apply(lambda r: self.getCTZ(r['delta rad'], self.lat, r['w rad']), axis=1)
 
         self.df['TZ'] = self.df['CTZ'].apply(math.acos)
-        self.df['SZA'] = self.df['CTZ'].apply(math.acos).apply(math.degrees)
+        self.df['SZA'] = self.df['TZ'].apply(math.degrees)
  
         
         #self.df['Ys'] = self.df.apply(lambda r: self.Ys(r['w'], r['CTZ'], r['TZ'], r['delta rad']), axis=1)
@@ -78,24 +78,31 @@ class Geo:
         
         # ##ARGPV1
         # ##Masa de aire de casten, es la que se utiliza
-        self.df['Mak'] = list(map(self.Mak, self.df.CTZ, self.df.TZ))
+        self.df['Mak'] = list(map(self.Mak, self.df.CTZ, self.df.SZA))
         
         
         #self.ktrp = self.getKtrp()
         
         
         self.ktrp = self.getKtrp()
-        
+        self.ktrp2 = self.getKtrp2()
         
         self.df['GHIargp'] = list(map(self.generateGHIargp, self.df.TOA, self.df.Mak))
-        # # self.df['GHIargp_2'] = self.generateGHIargp_2(self.df)
+        self.df['GHIargp2'] = list(map(self.generateGHIargp2, self.df.TOA, self.df.Mak))
+        
+        
         
     def getKtrp(self):
         if(self.altura>1000):
             return 0.7 + 1.6391 * 10**-3 * self.altura ** 0.5500 
         else:
             return 0.7570 + 1.0112 * 10**-5 * self.altura ** 1.1067
-        
+    
+    def getKtrp2(self):
+        return 0.649 + 0.02 * self.altura ** 0.28
+            
+    
+    
     #Ecuación de tiempo
     #dado dia ordinal 
     #devuelve valor ecuación del tiempo en minutos
@@ -227,56 +234,31 @@ class Geo:
             return 0
         
         
-    def getMA(self,CTZs):
-        result = []
-        for ctz in CTZs:
-            try:
-                valor1 = 1.002432 * ctz**2 + 0.148386*ctz + 0.0096
-                valor2 = ctz**3 + 0.149864*ctz**2 + 0.0102963*ctz + 0.000303978
-                result.append(valor1/valor2)
-            except Exception:
-                result.append(0)
-        return result
+    # def getMA(self,CTZs):
+    #     result = []
+    #     for ctz in CTZs:
+    #         try:
+    #             valor1 = 1.002432 * ctz**2 + 0.148386*ctz + 0.0096
+    #             valor2 = ctz**3 + 0.149864*ctz**2 + 0.0102963*ctz + 0.000303978
+    #             result.append(valor1/valor2)
+    #         except Exception:
+    #             result.append(0)
+    #     return result
     
     
-    def Mak(self, CTZ, TZ):
+    def Mak(self, CTZ, SZA):
         
-        
-        presion = 101355* (288.15/(288.15 - 0.0065 * self.altura)) ** -5.255877
-        Amk = 1/ (CTZ + 0.15*(93.885 - TZ)**-1.253)
-        return Amk * (presion / 101355)
-        
-    
-    def Mak2(self, CTZ, TZ):
-        presion = 101355* (288.15/(288.15 - 0.0065 * self.altura)) ** -5.255877
-        
-        
-        
-        
-        Amk = 1/ (CTZ + 0.15*(93.885 - TZ)**-1.253)
-        
-        return Amk * (presion/101355)
-    
-    
-    def generateMa(self):
-        
-        cosTZ = self.df['CTZ'].tolist()
-        tz = self.df['TZ'].tolist()
-           
-        
-        
-        
-        presion =  math.pow(288.15/(288.15 - 0.0065 * 1150), -5.255877);
-        results = []
-        
-        for i, val in enumerate(cosTZ):
+        if CTZ > 0:
             
-            try:
-                calc = 1/(val + 0.15 * math.pow((93.885-  tz[i]), -1.253));
-                results.append(calc * presion)
-            except Exception:
-                results.append(0)        
-        return results
+            return (1 / (CTZ + 0.15 * (93.885 - SZA)** -1.253)) * ((288.15 / (288.15 - 0.0065 * self.altura))**-5.255877)     
+        else:
+            return 0
+        # tz = math.degrees(math.acos(CTZ))
+        
+        # presion = 101355* (288.15/(288.15 - 0.0065 * self.altura)) ** -5.255877
+        # Amk = 1/ (CTZ + 0.15*(93.885 - tz)**-1.253)
+        # return Amk * (presion / 101355)
+        
     
     
     
@@ -292,25 +274,29 @@ class Geo:
         
     
     
-    def generateGHIargp_2(self, data):
-        GHI = data['TOA'].tolist()
-        AM = data['Mak'].tolist()
-    
-    
-    
-        result = []
-        for i, val in enumerate(GHI):
-            try:
-                result.append(GHI[i] * math.pow( self.ktrp_2 ,math.pow(AM[i], 0.678)))
-            except Exception:
-                result.append(0)
-        return result
+    def generateGHIargp2(self, TOA, AM):
+        # if TOA>0:    
+        #     return TOA * math.pow(self.ktrp2, math.pow(AM, 0.678))
+        # else:
+        #     return 0
+        try:
+            return TOA * math.pow(self.ktrp2, math.pow(AM, 0.678))
+        except Exception:
+            return 0
     
     
     def to_csv(self, name):
         self.df.to_csv(name+".csv")
 
- 
-        
-#geo  = Geo(freq='1', lat=-31.28, long=-57.92, gmt=-3, alt=1000, desde='01/01/2016', hasta='01/01/2016').df
 
+# full = pd.date_range(
+#     start="2018/01/01 00:00", 
+#     end="2018/12/31 23:59",
+#     freq="1 min")
+
+
+# dfGeo = Geo.Geo(full, 
+#                 lat=-22.7218, 
+#                 long= -65.8990, 
+#                 gmt = 0,
+#                 alt = 3487, beta = 0).df
