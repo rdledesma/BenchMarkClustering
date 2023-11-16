@@ -44,6 +44,9 @@ d['vi'] = vi
 daily = d.groupby(d['date'].dt.date).mean().reset_index()
 
 
+
+
+
 daily['date'] = pd.to_datetime(daily.date)
 daily['vi'] = daily.vi / daily.vi.max()
 
@@ -128,10 +131,10 @@ puntos = np.array([[0.1, 0.1], [0.15, 1], [0.3, 0.6], [0.8, 0.7]])
 
 # Etiquetas para los puntos
 etiquetas = {
-    (0.1, 0.1): 'dia nublado',
-    (0.15, 1): 'dia claro',
-    (0.3, 0.6): 'dia variable',
-    (0.8, 0.7): 'día altamente variable'
+    (0.1, 0.1): 'Overcast',
+    (0.15, 1): 'Clear',
+    (0.3, 0.6): 'Variable',
+    (0.8, 0.7): 'Highly Variable'
 }
 
 # Colores para los puntos en el array
@@ -156,10 +159,10 @@ for punto, etiqueta in etiquetas.items():
     plt.scatter(punto[0], punto[1], color=color_asignado, marker='x', label=f'{etiqueta}')
 
 # Añadir etiquetas y leyenda
-plt.xlabel('vi')
-plt.ylabel('kc')
+plt.ylabel('Daily Clearness Index')
+plt.xlabel('Kc')
 plt.legend()
-plt.title('Grupos de pares vi y kc')
+#plt.title('Grupos de pares vi y kc')
 
 # Mostrar el gráfico
 plt.show()
@@ -182,18 +185,51 @@ plt.plot(s[s.date.dt.dayofyear == 1].index, s[s.date.dt.dayofyear == 24].GHI, '-
 
 
 
-dia30 = s[s.date.dt.dayofyear == 30].GHI.values
-dia1 = s[s.date.dt.dayofyear == 1].GHI.values
-dia2 = s[s.date.dt.dayofyear == 2].GHI.values
-dia14 = s[s.date.dt.dayofyear == 14].GHI.values
+s['HR'] = s.date.dt.hour + s.date.dt.minute / 60  
+
+dia30 = s[s.date.dt.dayofyear == 30]
+dia1 = s[s.date.dt.dayofyear == 1]
+dia2 = s[s.date.dt.dayofyear ==31]
+dia14 = s[s.date.dt.dayofyear == 12]
 
 
-plt.plot(dia30, label="dia nublado")
-plt.plot(dia1, label="dia claro")
-plt.plot(dia2, label="dia variabble")
-plt.plot(dia14, label="altamente variable")
-plt.legend()
 
-d[['date', 'TOA', 'Clear sky GHI', 'GHI', 'ghi', 'Mak', 'alpha', 'CTZ',
-       'delta', 'kc', 'kcmod', 'kt', 'ktmod', 'cluster']].to_csv('sa_15_stain.csv', index=False)
+
+
+plt.plot(dia30.HR, dia30.ghi, label="Overcast", color="gray")
+plt.plot(dia1.HR, dia1.ghi, label="Clear", color="blue")
+plt.plot(dia2.HR, dia2.ghi, label="Variable", color="orange")
+plt.plot(dia14.HR, dia14.ghi, label="Highly Variable", color="red")
+plt.legend(loc='upper left')
+plt.xlabel("Hour of the Day (hr)")
+plt.ylabel("GHI Irradiance (W/m²)")
+# d[['date', 'TOA', 'Clear sky GHI', 'GHI', 'ghi', 'Mak', 'alpha', 'CTZ',
+#        'delta', 'kc', 'kcmod', 'kt', 'ktmod', 'cluster']].to_csv('sa_15_stain.csv', index=False)
+
+
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Configurar el estilo de seaborn
+sns.set(style="ticks")
+
+# Crear una figura y ejes
+fig, ax = plt.subplots(figsize=(10, 6))
+
+# Graficar los datos con colores predefinidos de seaborn
+sns.lineplot(data=dia30, label="Overcast", ax=ax, color=sns.color_palette()[0])
+sns.lineplot(data=dia1, label="Clear", ax=ax, color=sns.color_palette()[1])
+sns.lineplot(data=dia2, label="Variable Part of the Day", ax=ax, color=sns.color_palette()[2])
+sns.lineplot(data=dia14, label="Highly Variability All Day", ax=ax, color=sns.color_palette()[3])
+
+# Configurar etiquetas y leyenda
+ax.set(xlabel="Time", ylabel="GHI Irradiance (W/m²)")
+ax.legend()
+
+# Eliminar los ticks del eje x
+ax.xaxis.set_major_locator(plt.NullLocator())
+
+# Mostrar el gráfico
+plt.show()
 
