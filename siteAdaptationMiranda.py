@@ -12,7 +12,7 @@ import statsmodels.api as sm
 import numpy as np
 import Metrics as m
 import matplotlib.pyplot as plt
-
+from solarforecastarbiter import metrics
 d = pd.read_csv('sa_15_Diego2.csv')
 d['date'] = pd.to_datetime(d.date)
 c = pd.read_csv('sa_15_cony.csv')
@@ -29,7 +29,7 @@ c['cluster'] = d.clsDiego.values
 c = c[c.alpha>10]
 c = c[c.kc<1.3]
 c = c.dropna()
-
+c = c[c.ghi>4]
 train = c[c.date.dt.year == 2015]
 test = c[c.date.dt.year < 2015]
 
@@ -85,3 +85,12 @@ pred = test.pred
 print(m.rmbe(true, pred))
 print(m.rmae(true, pred))
 print(m.rrmsd(true, pred))
+r = m.rrmsd(true, pred)
+
+ksi = metrics.deterministic.kolmogorov_smirnov_integral(true, pred)/ true.mean() * 100
+
+
+
+over = metrics.deterministic.over(true, pred) / true.mean() * 100
+
+cpi = (ksi + over + 2 *r)/4
