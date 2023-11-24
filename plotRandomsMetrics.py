@@ -12,6 +12,9 @@ import matplotlib.pyplot as plt
 drmsd = pd.read_csv('randomMetrics/rmsd.csv')
 dmae = pd.read_csv('randomMetrics/mae.csv')
 dmbe = pd.read_csv('randomMetrics/mbe.csv')
+dksi = pd.read_csv('randomMetrics/ksi.csv')
+dover = pd.read_csv('randomMetrics/over.csv')
+dcpi = pd.read_csv('randomMetrics/cpi.csv')
 
 
 
@@ -150,5 +153,6 @@ plt.show()
 
 
 
-
-
+dksi.mean()
+dover.mean()
+dcpi.mean()

@@ -13,6 +13,7 @@ import numpy as np
 import Metrics as m
 import matplotlib.pyplot as plt
 
+import solarforecastarbiter.metrics.deterministic as det
 
 
 
@@ -29,7 +30,9 @@ c['date'] = pd.to_datetime(c.date)
 dfmae = pd.DataFrame(columns=[f"met_{i}" for i in range(2,13)])
 dfmbe = pd.DataFrame(columns=[f"met_{i}" for i in range(2,13)])
 dfrmsd = pd.DataFrame(columns=[f"met_{i}" for i in range(2,13)])
-
+dfksi = pd.DataFrame(columns=[f"met_{i}" for i in range(2,13)])
+dfover = pd.DataFrame(columns=[f"met_{i}" for i in range(2,13)])
+dfcpi = pd.DataFrame(columns=[f"met_{i}" for i in range(2,13)])
 for i in range(0, 100):
         
     
@@ -109,6 +112,9 @@ for i in range(0, 100):
     errormae = []
     errormbe = []
     errorrmsd = []
+    errorksi = []
+    errorover = []
+    errorcpi = []
     for modelo in [2,3,4,5,6,7,8,9,10,11,12]:
         
         plt.figure(modelo)
@@ -121,6 +127,14 @@ for i in range(0, 100):
         errormbe.append( m.rmbe(true, pred) )
         errormae.append( m.rmae(true, pred) )
         
+        
+        ksi = det.kolmogorov_smirnov_integral(true, pred)/ true.mean() * 100
+        over = det.over(true, pred)/ true.mean() * 100
+        cpi = (ksi + over + 2 *m.rrmsd(true, pred))/4
+        
+        errorksi.append( ksi )
+        errorover.append( over)
+        errorcpi.append( cpi )
         # print(f"Modelo se separación: {modelo}")
         
         # print(m.rmbe(true, pred))
@@ -131,8 +145,9 @@ for i in range(0, 100):
     dfmae.loc[len(dfmae)] = errormae
     dfmbe.loc[len(dfmbe)] = errormbe
     dfrmsd.loc[len(dfrmsd)] = errorrmsd
-
-     
+    dfksi.loc[len(dfksi)] = errorksi
+    dfover.loc[len(dfover)] = errorover
+    dfcpi.loc[len(dfcpi)] = errorcpi
 
 
 plt.plot(dfmae.std())
@@ -140,4 +155,6 @@ plt.plot(dfmae.std())
 
 dfmae.to_csv('randomMetrics/mae.csv', index=False)
 dfmbe.to_csv('randomMetrics/mbe.csv', index=False)
-dfrmsd.to_csv('randomMetrics/rmsd.csv', index=False)
+dfksi.to_csv('randomMetrics/ksi.csv', index=False)
+dfover.to_csv('randomMetrics/over.csv', index=False)
+dfcpi.to_csv('randomMetrics/cpi.csv', index=False)

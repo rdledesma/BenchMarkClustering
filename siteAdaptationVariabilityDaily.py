@@ -29,6 +29,7 @@ c['cluster'] = d.cluster.values
 c = c[c.alpha>10]
 c = c[c.kc<1.3]
 c = c.dropna()
+c = c[c.ghi>4]
 
 train = c[c.date.dt.year == 2015]
 test = c[c.date.dt.year < 2015]
@@ -80,8 +81,18 @@ plt.plot(test.ghi, test.pred, '.')
 
 
 true = test.ghi
-pred = test.GHI
+pred = test.pred
 
 m.rmbe(true, pred)
 m.rmae(true, pred)
 m.rrmsd(true, pred)
+
+r = m.rrmsd(true, pred)
+
+
+import solarforecastarbiter.metrics.deterministic as det
+
+
+ksi = det.kolmogorov_smirnov_integral(true, pred)/ true.mean() * 100
+over = det.over(true, pred)/ true.mean() * 100
+cpi = (ksi + over + 2 *r)/4
